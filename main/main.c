@@ -26,7 +26,7 @@
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event.h"
+#include "esp_event_loop.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
@@ -45,10 +45,6 @@ TaskHandle_t kDAPTaskHandle = NULL;
 
 
 static const char *MDNS_TAG = "server_common";
-static const char *TAG = "wifi_station";
-
-#define WIFI_SSID "your_ssid"
-#define WIFI_PASS "your_password"
 
 void mdns_setup() {
     // initialize mDNS
@@ -76,57 +72,36 @@ void mdns_setup() {
     ESP_LOGI(MDNS_TAG, "mDNS instance name set to: [%s]", MDNS_INSTANCE);
 }
 
-void wifi_init_sta(void) {
-    esp_netif_init();
-    esp_event_loop_create_default();
-    esp_netif_create_default_wifi_sta();
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
-
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = WIFI_SSID,
-            .password = WIFI_PASS,
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-        },
-    };
-    esp_wifi_set_mode(WIFI_MODE_STA);
-    esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
-    esp_wifi_start();
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-    ESP_LOGI(TAG, "connect to ap SSID:%s password:%s", WIFI_SSID, WIFI_PASS);
-}
-
 void app_main() {
-    // 初始化NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    esp_log_level_set("wifi", ESP_LOG_VERBOSE); 
+    // struct rst_info *rtc_info = system_get_rst_info();
 
-    // 初始化WiFi
-    wifi_init_sta();
-
-    // 其他代码...
-    DAP_Setup();
-    timer_init();
-
-#if (USE_MDNS == 1)
-    mdns_setup();
+    // os_printf("resetnit();
 #endif
+    w    // struct rst_info *rtc_info = system_get_rst_info();
 
+    // os_printf("reset reason: %x\n", rtc_info->reason);
 
-#if (USE_OTA == 1)
-    co_handle_t handle;
-    co_config_t config = {
-        .thread_name = "corsacOTA",
-        .stack_size = 3192,
-        .thread_prio = 8,
-        .listen_port = 3241,
-        .max_listen_num = 2,
+    // if (rtc_info->reason == REASON_WDT_RST ||
+    //     rtc_info->reason == REASON_EXCEPTION_RST ||
+    //     rtc_info->reason == REASON_SOFT_WDT_RST)
+    // {
+    // if (rtc_info->reason == REASON_EXCEPTION_RST)
+    // {
+    //     os_printf("Fatal exception (%d):\n", rtc_info->exccause);
+    // }
+    // os_printf("epc1=0x%08x, epc2=0x%08x, epc3=0x%08x,excvaddr=0x%08x, depc=0x%08x\n",
+    //             rtc_info->epc1, rtc_info->epc2, rtc_info->epc3,
+    //             rtc_info->excvaddr, rtc_info->depc);
+    // }
+
+    ESP_ERROR_CHECK(nvs_flash_init());
+
+#if (USE_UART_BRIDGE == 1)
+    uart_bridge_init();
+#endif
+    wifi_init();
+max_listen_num = 2,
         .wait_timeout_sec = 60,
         .wait_timeout_usec = 0,
     };
