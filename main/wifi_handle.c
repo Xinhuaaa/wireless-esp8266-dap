@@ -152,12 +152,15 @@ void wifi_init(void) {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
+    // 设置WiFi功率到60%
+    int8_t max_tx_power = 60 * 82 / 100; // 60% of 82 (maximum power level in units of 0.25 dBm)
+    ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(max_tx_power));
+
     // os_printf("Setting WiFi configuration SSID %s...\r\n", wifi_config.sta.ssid);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
     ssid_change();
     ESP_ERROR_CHECK(esp_wifi_start());
-
 
     wait_for_ip();
 }
